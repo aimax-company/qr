@@ -1,6 +1,7 @@
 # QR Dynamic Redirect System
 
 ## Mục tiêu
+Thiết kế ưu tiên trải nghiệm và độ tin cậy của người dùng cuối. Toàn bộ mã QR đều sử dụng domain chính của doanh nghiệp thay vì subdomain hoặc domain kỹ thuật để tăng mức độ nhận diện thương hiệu và giảm rủi ro người dùng nghi ngờ URL không chính thống.
 
 Xây dựng hệ thống QR động trên Cloudflare cho phép:
 
@@ -252,3 +253,92 @@ Không cần thay đổi hoặc in lại mã QR.
 3. Redirect phải nhanh và độc lập với thống kê.
 4. Không lưu counter trong KV.
 5. Luôn giữ nguyên định dạng URL QR để dễ mở rộng trong tương lai.
+
+## Lý do sử dụng đường dẫn `/qr/` trên domain chính
+
+Hệ thống sử dụng định dạng:
+
+```text
+https://domain.com/qr/?id=example
+```
+
+thay vì:
+
+```text
+https://qr.domain.com/?id=example
+```
+
+hoặc:
+
+```text
+https://example.workers.dev/?id=example
+```
+
+### Mục tiêu
+
+Tăng độ tin cậy đối với người dùng cuối khi quét mã QR.
+
+Hiện nay nhiều ứng dụng quét QR sẽ hiển thị URL trước khi mở. Người dùng thường chỉ quan sát tên miền chính để quyết định có tiếp tục truy cập hay không.
+
+Ví dụ:
+
+```text
+https://domain.com/qr/?id=example
+```
+
+Người dùng dễ nhận biết đây là tên miền chính thức của doanh nghiệp.
+
+Trong khi đó các URL dạng:
+
+```text
+https://qr.domain.com
+https://example.workers.dev
+```
+
+có thể làm giảm mức độ tin tưởng đối với một số người dùng không am hiểu kỹ thuật.
+
+### Kiến trúc triển khai
+
+Website hiện tại vẫn hoạt động bình thường trên cùng domain:
+
+```text
+domain.com/                -> Website chính
+domain.com/login           -> Website chính
+domain.com/admin           -> Website chính
+domain.com/api/*           -> Website chính
+
+domain.com/qr/*            -> QR Redirect Service
+```
+
+Cloudflare Worker chỉ xử lý các request thuộc đường dẫn:
+
+```text
+/qr/*
+```
+
+Tất cả các request còn lại tiếp tục được chuyển tới hệ thống hiện có (Nginx, Java, Tomcat, Spring Boot, v.v.).
+
+### Lợi ích
+
+* Giữ nguyên thương hiệu trên URL.
+* Tăng độ tin cậy khi khách hàng quét QR.
+* Không làm thay đổi kiến trúc website hiện tại.
+* Có thể sử dụng Cloudflare Worker, KV và D1 mà người dùng không nhận thấy sự khác biệt.
+* Dễ mở rộng trong tương lai mà không cần thay đổi hoặc in lại mã QR.
+
+### Nguyên tắc bất biến
+
+Định dạng URL QR được xem là API công khai của hệ thống:
+
+```text
+https://domain.com/qr/?id=<QR_ID>
+```
+
+Backend có thể thay đổi theo thời gian:
+
+```text
+KV -> D1 -> Cache -> Database khác
+```
+
+nhưng URL của khách hàng luôn giữ nguyên để đảm bảo tính tương thích lâu dài.
+
