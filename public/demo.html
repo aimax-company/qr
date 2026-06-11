@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      a {
+        display: inline-block;
+        margin: 6px 8px 6px 0;
+        padding: 8px 12px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+      }
+      a:hover { background: #1d4ed8; }
+    </style>
+  </head>
+  <body>
+    <h1>QR Demo Page</h1>
+    <p>Trang này giúp bạn thử trực tiếp các route của worker trong trình duyệt.</p>
+
+    <div class="card">
+      <h2>QR routes</h2>
+      <a href="/qr?id=app">/qr?id=app</a>
+      <a href="/qr?source=landing">/qr?source=landing</a>
+      <a href="/qr">/qr</a>
+    </div>
+
+    <div class="card">
+      <h2>Non-QR routes</h2>
+      <a href="/login">/login</a>
+      <a href="/">/</a>
+    </div>
+  </body>
+</html>
