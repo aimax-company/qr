@@ -1,7 +1,32 @@
+const normalizeBaseUrl = (value) => value.replace(/\/+$/, "");
+
+const logQrScan = async (request, env, qrId) => {
+  if (!env?.DB || typeof env.DB.prepare !== "function") {
+    return;
+  }
+
+  try {
+    await env.DB.prepare(`
+      INSERT INTO qr_logs (qr_id, ip, country, user_agent, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `)
+      .bind(
+        qrId,
+        request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || null,
+        request.cf?.country || null,
+        request.headers.get("User-Agent") || null,
+        Date.now()
+      )
+      .run();
+  } catch (error) {
+    console.warn("QR log insert failed", error);
+  }
+};
+
 const handler = {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const sourceDomain = env.DOMAIN || "https://domain.com";
+    const sourceDomain = normalizeBaseUrl(env.DOMAIN || "https://domain.com");
     const targetDomain = env.DOMAIN_TARGET || "https://qr.domain.com";
 
     const isQrRoute = url.pathname === "/qr" || url.pathname === "/qr/";
@@ -28,13 +53,28 @@ const handler = {
         fallbackUrl.searchParams.append(key, value);
       });
 
-      return Response.redirect(fallbackUrl.toString(), 302);
+      const fallbackLocation = fallbackUrl.search === ""
+        ? sourceDomain
+        : fallbackUrl.toString();
+
+      return Response.redirect(fallbackLocation, 302);
     }
 
-    const redirectUrl = new URL(targetDomain);
-    redirectUrl.searchParams.set("id", qrId);
+    const targetUrl = env.REDIRECTS && typeof env.REDIRECTS.get === "function"
+      ? await env.REDIRECTS.get(qrId)
+      : null;
 
-    return Response.redirect(redirectUrl.toString(), 302);
+    if (!targetUrl) {
+      const legacyRedirectUrl = new URL(targetDomain);
+      legacyRedirectUrl.searchParams.set("id", qrId);
+      return Response.redirect(legacyRedirectUrl.toString(), 302);
+    }
+
+    if (ctx && typeof ctx.waitUntil === "function") {
+      ctx.waitUntil(logQrScan(request, env, qrId));
+    }
+
+    return Response.redirect(targetUrl, 302);
   }
 };
 

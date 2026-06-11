@@ -20,7 +20,20 @@ test('redirects to homepage when id parameter is missing', async () => {
   const response = await handler.fetch(request, env);
 
   assert.equal(response.status, 302);
-  assert.equal(response.headers.get('location'), 'https://domain.com');
+  assert.equal(response.headers.get('location'), 'https://domain.com/');
+});
+
+test('redirects to the KV target for a known QR id', async () => {
+  const request = new Request('https://domain.com/qr?id=app');
+  const response = await handler.fetch(request, {
+    ...env,
+    REDIRECTS: {
+      get: async (id) => (id === 'app' ? 'https://domain.com/download' : null)
+    }
+  });
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'https://domain.com/download');
 });
 
 test('redirects to homepage with the original query string when no qr value is present', async () => {

@@ -1,5 +1,21 @@
 # QR Dynamic Redirect System
 
+## Cách chạy nhanh (Stage 1)
+
+1. Cài dependency:
+   `npm install`
+2. Chạy test:
+   `npm test`
+3. Chạy Worker local:
+   `npm run dev`
+4. Tạo KV namespace và D1 database thật trên Cloudflare, rồi cập nhật ID trong `wrangler.jsonc`.
+5. Seed KV sample mappings:
+   `npm run seed:kv`
+6. Apply schema D1:
+   `npx wrangler d1 execute qr-redirect-stats --local --file=./schema.sql`
+
+> Lưu ý: `qr.domain.com` là giá trị placeholder. Khi deploy thật, thay bằng domain thực của bạn hoặc giữ `DOMAIN_TARGET` phù hợp với môi trường của bạn.
+
 ## Mục tiêu
 Thiết kế ưu tiên trải nghiệm và độ tin cậy của người dùng cuối. 
 Toàn bộ mã QR đều sử dụng domain chính của doanh nghiệp thay vì subdomain hoặc domain kỹ thuật để tăng mức độ nhận diện thương hiệu và giảm rủi ro người dùng nghi ngờ URL không chính thống.

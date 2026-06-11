@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "seed:kv": "node scripts/seed-kv.js",
     "test": "node --test",
     "test:wrangler": "wrangler dev --test-scheduled"
+  },
+  "devDependencies": {
+    "wrangler": "^4.99.0"
   }
 }
