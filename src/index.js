@@ -1,8 +1,8 @@
 const handler = {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const sourceDomain = env.DOMAIN || "https://domain.com";
-    const targetDomain = env.DOMAIN_TARGET || "https://qr.domain.com";
+    const sourceDomain = env.DOMAIN || "https://pinsacduphong.com";
+    const targetDomain = env.DOMAIN_TARGET || "https://qr.pinsacduphong.com";
 
     const isQrRoute = url.pathname === "/qr" || url.pathname === "/qr/";
 
