@@ -2,4 +2,19 @@
   "name": "qr-redirect",
   "main": "src/index.js",
   "compatibility_date": "2026-06-09",
+  "kv_namespaces": [
+    {
+      "binding": "REDIRECTS",
+      "id": "07593567cdf0426fba3ec0e0625c641d"
+    }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "aimax_qr_redirects",
+      "database_id": "c138569d-8f86-4b2f-b3e9-416295f7ae75"
+    }
+  ]
+}
 }
