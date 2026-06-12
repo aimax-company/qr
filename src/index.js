@@ -1,22 +1,33 @@
+import { getConfig } from "./config";
+import { logScan } from "./services/logger";
+import { getTargetUrl } from "./services/redirect";
+import { redirectHome } from "./utils/response";
+
 export default {
   async fetch(request, env, ctx) {
+
+    const config = getConfig(env);
 
     const url = new URL(request.url);
 
     if (url.pathname !== "/qr") {
-      return Response.redirect(env.HOME_URL, 302);
+      return redirectHome(config.HOME_URL);
     }
 
     const qrId = url.searchParams.get("id");
 
     if (!qrId) {
-      return Response.redirect(env.HOME_URL, 302);
+      return redirectHome(config.HOME_URL);
     }
 
-    const targetUrl = await env.REDIRECTS.get(qrId);
+    const targetUrl =
+      await getTargetUrl(
+        config.REDIRECTS,
+        qrId
+      );
 
     if (!targetUrl) {
-      return Response.redirect(env.HOME_URL, 302);
+      return redirectHome(config.HOME_URL);
     }
 
     try {
@@ -24,52 +35,27 @@ export default {
     } catch {
 
       ctx.waitUntil(
-        env.aimax_qr_redirects.prepare(`
-          INSERT INTO qr_logs
-          (
-            qr_id,
-            ip,
-            country,
-            user_agent,
-            created_at
-          )
-          VALUES (?, ?, ?, ?, ?)
-        `)
-        .bind(
+        logScan(
+          config.DB,
           qrId,
-          request.headers.get("CF-Connecting-IP"),
-          request.cf?.country || null,
-          request.headers.get("User-Agent"),
-          Date.now()
+          request
         )
-        .run()
       );
 
-      return Response.redirect(env.HOME_URL, 302);
+      return redirectHome(config.HOME_URL);
     }
 
     ctx.waitUntil(
-      env.aimax_qr_redirects.prepare(`
-        INSERT INTO qr_logs
-        (
-          qr_id,
-          ip,
-          country,
-          user_agent,
-          created_at
-        )
-        VALUES (?, ?, ?, ?, ?)
-      `)
-      .bind(
+      logScan(
+        config.DB,
         qrId,
-        request.headers.get("CF-Connecting-IP"),
-        request.cf?.country || null,
-        request.headers.get("User-Agent"),
-        Date.now()
+        request
       )
-      .run()
     );
 
-    return Response.redirect(targetUrl, 302);
+    return Response.redirect(
+      targetUrl,
+      302
+    );
   }
 };
