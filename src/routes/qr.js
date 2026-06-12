@@ -1,3 +1,5 @@
+// File: src/routes/qr.js
+
 import { getConfig } from "../config";
 import { getTargetUrl } from "../services/redirect";
 import { logScan } from "../services/logger";
@@ -10,8 +12,10 @@ export async function handleQr(
   ctx
 ) {
   const config = getConfig(env);
+  const home = config.HOME_URL || "https://example.com";
+
   if (!config?.DB) {
-    return redirectHome(config.HOME_URL);
+    return redirectHome(home);
   }
 
   const url = new URL(request.url);
@@ -24,12 +28,16 @@ export async function handleQr(
         config.DB,
         null,
         null,
-        request
+        request,
+        {
+        name: "MISSING_QR_ID",
+        message: "QR id is missing"
+        }
       ).catch(() => {})
     );
 
     return redirectHome(
-      config.HOME_URL
+      home
     );
   }
 
@@ -46,32 +54,48 @@ export async function handleQr(
         config.DB,
         qrId,
         null,
-        request
+        request,
+        {
+        name: "QR_NOT_FOUND",
+        message: "No mapping for QR"
+        }
       ).catch(() => {})
     );
 
     return redirectHome(
-      config.HOME_URL
+      home
     );
   }
 
-let safeUrl;
+ let safeUrl;
 
+  // ❌ invalid URL
   try {
     safeUrl = new URL(targetUrl);
-
-    if (!["http:", "https:"].includes(safeUrl.protocol)) {
-      throw new Error("BAD_PROTOCOL");
-    }
-
   } catch {
     ctx.waitUntil(
-      logError(config.DB, qrId, targetUrl, request).catch(() => {})
+      logError(config.DB, qrId, targetUrl, request, {
+        name: "INVALID_URL",
+        message: "URL parse failed"
+      }).catch(() => {})
     );
 
-    return redirectHome(config.HOME_URL);
+    return redirectHome(home);
   }
 
+  // ❌ invalid protocol
+  if (!["http:", "https:"].includes(safeUrl.protocol)) {
+    ctx.waitUntil(
+      logError(config.DB, qrId, targetUrl, request, {
+        name: "INVALID_PROTOCOL",
+        message: "Blocked protocol"
+      }).catch(() => {})
+    );
+
+    return redirectHome(home);
+  }
+
+  // Chuyển hương về URL đích và ghi log
   ctx.waitUntil(
     logScan(config.DB, qrId, request).catch(() => {})
   );
