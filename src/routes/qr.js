@@ -21,7 +21,6 @@ export async function handleQr(
       logError(
         config.DB,
         null,
-        "MISSING_ID",
         null,
         request
       )
@@ -44,7 +43,6 @@ export async function handleQr(
       logError(
         config.DB,
         qrId,
-        "NOT_FOUND",
         null,
         request
       )
@@ -63,7 +61,6 @@ export async function handleQr(
       logError(
         config.DB,
         qrId,
-        "INVALID_URL",
         targetUrl,
         request
       )
