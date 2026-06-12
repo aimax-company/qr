@@ -18,7 +18,12 @@ export async function handleQr(
     return redirectHome(home);
   }
 
-  const url = new URL(request.url);
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return redirectHome(home);
+  }
   const qrId = url.searchParams.get("id");
 
   if (!qrId) {
