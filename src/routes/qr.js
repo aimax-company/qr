@@ -1,6 +1,7 @@
 import { getConfig } from "../config";
 import { getTargetUrl } from "../services/redirect";
 import { logScan } from "../services/logger";
+import { logError } from "../services/errorLogger";
 import { redirectHome } from "../utils/response";
 
 export async function handleQr(
@@ -12,16 +13,16 @@ export async function handleQr(
 
   const url = new URL(request.url);
 
-  const qrId =
-    url.searchParams.get("id");
+  const qrId = url.searchParams.get("id");
 
   if (!qrId) {
 
     ctx.waitUntil(
-      logScan(
+      logError(
         config.DB,
         null,
         "MISSING_ID",
+        null,
         request
       )
     );
@@ -40,10 +41,11 @@ export async function handleQr(
   if (!targetUrl) {
 
     ctx.waitUntil(
-      logScan(
+      logError(
         config.DB,
         qrId,
         "NOT_FOUND",
+        null,
         request
       )
     );
@@ -58,10 +60,11 @@ export async function handleQr(
   } catch {
 
     ctx.waitUntil(
-      logScan(
+      logError(
         config.DB,
         qrId,
         "INVALID_URL",
+        targetUrl,
         request
       )
     );
@@ -75,7 +78,6 @@ export async function handleQr(
     logScan(
       config.DB,
       qrId,
-      "SUCCESS",
       request
     )
   );
