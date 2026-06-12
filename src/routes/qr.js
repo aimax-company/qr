@@ -8,19 +8,20 @@ export async function handleQr(
   env,
   ctx
 ) {
-
   const config = getConfig(env);
 
   const url = new URL(request.url);
 
-  const qrId = url.searchParams.get("id");
+  const qrId =
+    url.searchParams.get("id");
 
   if (!qrId) {
 
     ctx.waitUntil(
       logScan(
         config.DB,
-        "missing",
+        null,
+        "MISSING_ID",
         request
       )
     );
@@ -42,6 +43,7 @@ export async function handleQr(
       logScan(
         config.DB,
         qrId,
+        "NOT_FOUND",
         request
       )
     );
@@ -59,6 +61,7 @@ export async function handleQr(
       logScan(
         config.DB,
         qrId,
+        "INVALID_URL",
         request
       )
     );
@@ -72,6 +75,7 @@ export async function handleQr(
     logScan(
       config.DB,
       qrId,
+      "SUCCESS",
       request
     )
   );
