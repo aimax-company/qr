@@ -1,41 +1,75 @@
-const handler = {
-  async fetch(request, env) {
+export default {
+  async fetch(request, env, ctx) {
+
     const url = new URL(request.url);
-    const sourceDomain = env.DOMAIN || "https://pinsacduphong.com";
-    const targetDomain = env.DOMAIN_TARGET || "https://qr.pinsacduphong.com";
 
-    const isQrRoute = url.pathname === "/qr" || url.pathname === "/qr/";
-
-    if (!isQrRoute) {
-      if (url.pathname === "/demo") {
-        return fetch(new Request(new URL("/demo.html", request.url)));
-      }
-
-      const proxyUrl = new URL(request.url);
-      const sourceUrl = new URL(sourceDomain);
-      proxyUrl.protocol = sourceUrl.protocol;
-      proxyUrl.host = sourceUrl.host;
-      proxyUrl.port = sourceUrl.port;
-
-      return fetch(proxyUrl, request);
+    if (url.pathname !== "/qr") {
+      return Response.redirect(env.HOME_URL, 302);
     }
 
-    const qrId = url.searchParams.get("id") || url.searchParams.get("qr");
+    const qrId = url.searchParams.get("id");
 
     if (!qrId) {
-      const fallbackUrl = new URL(sourceDomain);
-      url.searchParams.forEach((value, key) => {
-        fallbackUrl.searchParams.append(key, value);
-      });
-
-      return Response.redirect(fallbackUrl.toString(), 302);
+      return Response.redirect(env.HOME_URL, 302);
     }
 
-    const redirectUrl = new URL(targetDomain);
-    redirectUrl.searchParams.set("id", qrId);
+    const targetUrl = await env.REDIRECTS.get(qrId);
 
-    return Response.redirect(redirectUrl.toString(), 302);
+    if (!targetUrl) {
+      return Response.redirect(env.HOME_URL, 302);
+    }
+
+    try {
+      new URL(targetUrl);
+    } catch {
+
+      ctx.waitUntil(
+        env.DB.prepare(`
+          INSERT INTO qr_logs
+          (
+            qr_id,
+            ip,
+            country,
+            user_agent,
+            created_at
+          )
+          VALUES (?, ?, ?, ?, ?)
+        `)
+        .bind(
+          qrId,
+          request.headers.get("CF-Connecting-IP"),
+          request.cf?.country || null,
+          request.headers.get("User-Agent"),
+          Date.now()
+        )
+        .run()
+      );
+
+      return Response.redirect(env.HOME_URL, 302);
+    }
+
+    ctx.waitUntil(
+      env.DB.prepare(`
+        INSERT INTO qr_logs
+        (
+          qr_id,
+          ip,
+          country,
+          user_agent,
+          created_at
+        )
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      .bind(
+        qrId,
+        request.headers.get("CF-Connecting-IP"),
+        request.cf?.country || null,
+        request.headers.get("User-Agent"),
+        Date.now()
+      )
+      .run()
+    );
+
+    return Response.redirect(targetUrl, 302);
   }
 };
-
-export default handler;
