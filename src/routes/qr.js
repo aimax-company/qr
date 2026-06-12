@@ -10,9 +10,11 @@ export async function handleQr(
   ctx
 ) {
   const config = getConfig(env);
+  if (!config?.DB) {
+    return redirectHome(config.HOME_URL);
+  }
 
   const url = new URL(request.url);
-
   const qrId = url.searchParams.get("id");
 
   if (!qrId) {
@@ -23,7 +25,7 @@ export async function handleQr(
         null,
         null,
         request
-      )
+      ).catch(() => {})
     );
 
     return redirectHome(
@@ -45,7 +47,7 @@ export async function handleQr(
         qrId,
         null,
         request
-      )
+      ).catch(() => {})
     );
 
     return redirectHome(
@@ -53,34 +55,26 @@ export async function handleQr(
     );
   }
 
+let safeUrl;
+
   try {
-    new URL(targetUrl);
+    safeUrl = new URL(targetUrl);
+
+    if (!["http:", "https:"].includes(safeUrl.protocol)) {
+      throw new Error("BAD_PROTOCOL");
+    }
+
   } catch {
-
     ctx.waitUntil(
-      logError(
-        config.DB,
-        qrId,
-        targetUrl,
-        request
-      )
+      logError(config.DB, qrId, targetUrl, request).catch(() => {})
     );
 
-    return redirectHome(
-      config.HOME_URL
-    );
+    return redirectHome(config.HOME_URL);
   }
 
   ctx.waitUntil(
-    logScan(
-      config.DB,
-      qrId,
-      request
-    )
+    logScan(config.DB, qrId, request).catch(() => {})
   );
 
-  return Response.redirect(
-    targetUrl,
-    302
-  );
+  return Response.redirect(safeUrl.toString(), 302);
 }

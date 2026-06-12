@@ -2,8 +2,11 @@ export async function logError(
   db,
   qrId,
   targetUrl,
-  request
+  request,
+  err
 ) {
+  const errorType = err?.name || "UNKNOWN_ERROR";
+  const country = request.cf?.country || null;
   return db.prepare(`
     INSERT INTO qr_logs
     (
@@ -20,8 +23,9 @@ export async function logError(
   .bind(
     qrId,
     errorType,
+    targetUrl || null,
     request.headers.get("CF-Connecting-IP"),
-    request.cf?.country || null,
+    country,
     request.headers.get("User-Agent"),
     Date.now()
   )
