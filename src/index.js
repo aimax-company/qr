@@ -24,7 +24,7 @@ export default {
     } catch {
 
       ctx.waitUntil(
-        env.DB.prepare(`
+        env.aimax_qr_redirects.prepare(`
           INSERT INTO qr_logs
           (
             qr_id,
@@ -49,7 +49,7 @@ export default {
     }
 
     ctx.waitUntil(
-      env.DB.prepare(`
+      env.aimax_qr_redirects.prepare(`
         INSERT INTO qr_logs
         (
           qr_id,
