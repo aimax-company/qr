@@ -1,4 +1,4 @@
-export async function logScan(
+export async function logError(
   db,
   qrId,
   request
