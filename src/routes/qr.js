@@ -1,5 +1,9 @@
 // File: src/routes/qr.js
 
+//
+// It is the core routing layer of the QR redirect system and is responsible for:
+// The function handleQr is designed for Cloudflare Workers and uses ctx.waitUntil
+// to perform logging operations asynchronously without blocking the HTTP response.
 import { getConfig } from "../config";
 import { getTargetUrl } from "../services/redirect";
 import { logScan } from "../services/logger";

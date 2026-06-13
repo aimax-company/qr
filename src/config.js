@@ -1,12 +1,12 @@
 export function getConfig(env) {
   return {
-    HOME_URL: env.HOME_URL,
-    DASHBOARD_URL: env.DASHBOARD_URL,
-    WEBAPP_URL: env.WEBAPP_URL,
-    ANDROID_URL: env.ANDROID_URL,
-    IOS_URL: env.IOS_URL,
+    HOME_URL: env.HOME_URL || "https://pinsacduphong.com",
+    DASHBOARD_URL: env.DASHBOARD_URL || "https://pinsacduphong.com/qr-dashboard",
+    WEBAPP_URL: env.WEBAPP_URL || "https://api.littlebee.vn",
+    ANDROID_URL: env.ANDROID_URL || "https://play.google.com/store/apps/details?id=com.pinsacduphong",
+    IOS_URL: env.IOS_URL || "https://apps.apple.com/app/id1548987654",
 
-    REDIRECTS: env.REDIRECTS,
+    KV: env.REDIRECTS,
     DB: env.DB,
 
     GOOGLE_CLIENT_ID:
